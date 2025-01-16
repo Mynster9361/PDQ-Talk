@@ -18,7 +18,7 @@ $tokenBody = @{
 # Request a Token
 $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method POST -Body $tokenBody
 
-# Setting up the authorization headers 
+# Setting up the authorization headers
 $authHeaders = @{
     "Authorization" = "Bearer $($tokenResponse.access_token)"
     "Content-type" = "application/json"
@@ -28,4 +28,4 @@ $userId = $secrets.userId
 $uri = "https://graph.microsoft.com/v1.0/users/$userId/appRoleAssignments"
 $appRoleAssignments = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 
-$appRoleAssignments.value | Select-Object -Property id, deletedDateTime, appRoleId, createdDateTime, principalDisplayName, principalType, resourceDisplayName
+$appRoleAssignments.value | Select-Object -ExcludeProperty id, principalId, resourceId

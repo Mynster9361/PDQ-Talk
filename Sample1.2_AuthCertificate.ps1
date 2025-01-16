@@ -11,15 +11,11 @@
 # To be honest if you need to use a certificate you should the msgraph module to handle the authentication for you as it is a bit more complex than using a secret or device code flow
 # https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0
 # But if you want to do it manually here is an example on how to do it
-# Import secrets from a json file
-
-$secretFile = "C:\Users\Morten\Desktop\github\PDQ-Talk\secrets3.json"
-$secrets = Get-Content -Path $secretFile | ConvertFrom-Json
 
 # Client Secret for the MS Graph API
-$tenantId = $secrets.tenantId
-$clientId = $secrets.clientId
-$thumbPrint = $secrets.thumbPrint
+$tenantId = $env:tenantId
+$clientId = $env:clientIdCert
+$thumbPrint = $env:thumbPrint
 
 $cert = Get-Item Cert:\CurrentUser\My\$thumbPrint
 
@@ -80,7 +76,7 @@ $JWT = $EncodedHeader + "." + $EncodedPayload
 
 # Get the private key object of your certificate
 # $PrivateKey = $Certificate.PrivateKey
-$PrivateKey = ([System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($Certificate))
+$PrivateKey = ([System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert))
 
 # Define RSA signature and hashing algorithm
 $RSAPadding = [Security.Cryptography.RSASignaturePadding]::Pkcs1

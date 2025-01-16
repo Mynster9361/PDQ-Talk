@@ -9,7 +9,7 @@ $clientId = $secrets.clientId
 $response = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/devicecode" -Method POST -Body @{
     client_id     = $clientId
     scope         = "user.read"
-} 
+}
 # Extract device code, user code and verification uri
 $deviceCode = $response.device_code
 $userCode = $response.user_code
@@ -28,7 +28,7 @@ $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tena
     device_code   = $deviceCode
 }
 
-# Setting up the authorization headers 
+# Setting up the authorization headers
 $authHeaders = @{
     "Authorization" = "Bearer $($tokenResponse.access_token)"
     "Content-type" = "application/json"
@@ -37,5 +37,5 @@ $authHeaders = @{
 $uri = "https://graph.microsoft.com/v1.0/me/appRoleAssignments"
 $me = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 
-$me.value
+$me.value  | Select-Object -ExcludeProperty id, principalId, resourceId
 

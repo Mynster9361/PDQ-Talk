@@ -18,7 +18,7 @@ $tokenBody = @{
 # Request a Token
 $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method POST -Body $tokenBody
 
-# Setting up the authorization headers 
+# Setting up the authorization headers
 $authHeaders = @{
     "Authorization" = "Bearer $($tokenResponse.access_token)"
     "Content-type" = "application/json"
@@ -45,4 +45,4 @@ do {
 while ($appRoleAssignments.'@odata.nextLink')
 
 # Display the results
-$allAppRoleAssignments | Select-Object -Property id, deletedDateTime, appRoleId, createdDateTime, principalDisplayName, principalType, resourceDisplayName
+$allAppRoleAssignments | Select-Object -ExcludeProperty id, principalId, resourceId
