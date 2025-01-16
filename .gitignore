@@ -1,5 +1,0 @@
-# Ignore certificate files
-*.cer
-
-# Ignore secret files
-secrets*.json
