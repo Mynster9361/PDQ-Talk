@@ -1,21 +1,48 @@
-# Documentation on advanced filters in Microsoft Graph and notation of where it is neccesary and where it is supported by default:
-# https://learn.microsoft.com/en-us/graph/aad-advanced-queries?tabs=http#support-for-filter-by-properties-of-microsoft-entra-id-directory-objects
+<#
+.SYNOPSIS
+    Demonstrates how to use the search functionality to find data in the Microsoft Graph API.
 
-# Using Sample1.1_AuthSecret.ps1
-$secretFile = "C:\Users\Morten\Desktop\github\PDQ-Talk\secrets2.json"
-$secrets = Get-Content -Path $secretFile | ConvertFrom-Json
-# Client Secret for the MS Graph API
-$tenantId = $secrets.tenantId
-$clientId = $secrets.clientId
-$clientSecret = $secrets.clientSecret
+.DESCRIPTION
+    This script shows how to authenticate an application using a client secret and then make an API call to search for users in the Microsoft Graph API.
+
+.NOTES
+    MS Docs on how to use search with Microsoft Graph API:
+    https://learn.microsoft.com/en-us/graph/search-query-parameter
+
+.PARAMETER tenantId
+    The tenant ID of the Azure AD tenant.
+
+.PARAMETER clientId
+    The client ID of the registered application.
+
+.PARAMETER clientSecret
+    The client secret of the registered application.
+
+.EXAMPLE
+    # Set environment variables for tenantId, clientId, and clientSecret
+    $env:tenantId = "your-tenant-id"
+    $env:clientId = "your-client-id"
+    $env:clientSecret = "your-client-secret"
+
+    # Run the script
+    .\6_Search.ps1
+
+    # The script will output the search results for users.
+#>
+
+# Tenant ID, Client ID, and Client Secret for the MS Graph API
+$tenantId = $env:tenantId
+$clientId = $env:clientId2
+$clientSecret = $env:clientSecret
 
 # Default Token Body
 $tokenBody = @{
-    Grant_Type = "client_credentials"
-    Scope = "https://graph.microsoft.com/.default"
-    Client_Id = $clientId
+    Grant_Type    = "client_credentials"
+    Scope         = "https://graph.microsoft.com/.default"
+    Client_Id     = $clientId
     Client_Secret = $clientSecret
 }
+
 # Request a Token
 $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method POST -Body $tokenBody
 
@@ -23,19 +50,13 @@ $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tena
 $authHeaders = @{
     "Authorization" = "Bearer $($tokenResponse.access_token)"
     "Content-type" = "application/json"
-    "ConsistencyLevel" = "eventual" # This header is needed when using advanced filters in Microsoft Graph
 }
-# https://learn.microsoft.com/en-us/graph/aad-advanced-queries?tabs=http#application-properties
-$uri = "https://graph.microsoft.com/v1.0/applications?`$filter=web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
-$groupsWithLocalHostUrl = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
-$groupsWithLocalHostUrl.value.web.redirectUris
-<#
-http://localhost:8080
-#>
-
-$uri = "https://graph.microsoft.com/v1.0/groups?`$search=`"displayName:Talk`" OR `"mail:Talk`"&`$filter=(mailEnabled eq false and securityEnabled eq true)&`$count=true"
+# https://learn.microsoft.com/en-us/graph/api/group-get?view=graph-rest-1.0&tabs=http
+$uri = "https://graph.microsoft.com/v1.0/groups?`$search=`"displayName:PDQ`" OR `"mail:Talk`""
+$authHeaders += @{ConsistencyLevel = "eventual"}
 $groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groups.value | Select-Object -ExcludeProperty id
+
 <#
 deletedDateTime               :
 classification                :

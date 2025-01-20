@@ -1,38 +1,63 @@
-# MS Docs about throttling:
-# https://learn.microsoft.com/en-us/graph/throttling
-# Service specific limits:
-# https://learn.microsoft.com/en-us/graph/throttling-limits
+<#
+.SYNOPSIS
+    Demonstrates how to handle throttling when making API calls to the Microsoft Graph API.
 
-# For the easiest way to replicate throttling, we are going to use clien secret authentication and the /Subscription endpoint
-# GET Subscription List	40 requests per 20 seconds
+.DESCRIPTION
+    This script shows how to handle throttling responses from the Microsoft Graph API.
+    It makes repeated API calls to the /subscriptions endpoint and handles the 429 Too Many Requests error by implementing retry logic.
 
-# Using Sample1.1_AuthSecret.ps1
-$secretFile = "C:\Users\Morten\Desktop\github\PDQ-Talk\secrets2.json"
-$secrets = Get-Content -Path $secretFile | ConvertFrom-Json
-# Client Secret for the MS Graph API
-$tenantId = $secrets.tenantId
-$clientId = $secrets.clientId
-$clientSecret = $secrets.clientSecret
+.NOTES
+    MS Docs on how to handle throttling:
+    https://learn.microsoft.com/en-us/graph/throttling
+
+.PARAMETER tenantId
+    The tenant ID of the Azure AD tenant.
+
+.PARAMETER clientId
+    The client ID of the registered application.
+
+.PARAMETER clientSecret
+    The client secret of the registered application.
+
+.EXAMPLE
+    # Set environment variables for tenantId, clientId, and clientSecret
+    $env:tenantId = "your-tenant-id"
+    $env:clientId = "your-client-id"
+    $env:clientSecret = "your-client-secret"
+
+    # Run the script
+    .\4_Throtling.ps1
+
+    # The script will make repeated API calls and handle throttling responses.
+#>
+
+# Tenant ID, Client ID, and Client Secret for the MS Graph API
+$tenantId = $env:tenantId
+$clientId = $env:clientId2
+$clientSecret = $env:clientSecret
 
 # Default Token Body
 $tokenBody = @{
-    Grant_Type = "client_credentials"
-    Scope = "https://graph.microsoft.com/.default"
-    Client_Id = $clientId
+    Grant_Type    = "client_credentials"
+    Scope         = "https://graph.microsoft.com/.default"
+    Client_Id     = $clientId
     Client_Secret = $clientSecret
 }
+
 # Request a Token
 $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method POST -Body $tokenBody
 
-# Setting up the authorization headers 
+# Setting up the authorization headers
 $authHeaders = @{
     "Authorization" = "Bearer $($tokenResponse.access_token)"
     "Content-type" = "application/json"
 }
-# https://learn.microsoft.com/en-us/graph/api/subscription-list?view=graph-rest-1.0&tabs=http
+
+# URI for the /subscriptions endpoint
 $uri = "https://graph.microsoft.com/v1.0/subscriptions"
 
 # The following will return a 429 error after 40 requests in 20 seconds which is the limit for the /Subscription endpoint
+# The error message will contain a Retry-After header with the number of seconds to wait before making another request
 $counter = 0
 do {
     write-output $counter
@@ -44,11 +69,11 @@ do {
         $Error[0]
         $Error[0].Exception.Response.Headers["Retry-After"]
         <#
-Invoke-RestMethod: 
+Invoke-RestMethod:
 Line |
    3 |          Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     | 
+     |
 {
   "error": {
     "code": "TooManyRequests",
@@ -61,7 +86,7 @@ Line |
         #>
         break
     }
-    
+
 } while (
     $true
 )
@@ -88,12 +113,12 @@ do {
             [int]$Delay = ([int]$_.Exception.Response.Headers["Retry-After"] + 1)
             Start-Sleep -Seconds $Delay
             $throtleState = $true
-        
+
         }
         else {
             # If for some reason we get a different error we will throw it
             throw ($_)
         }
     }
-    
+
 } while ($throtleState -eq $true)
