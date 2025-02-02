@@ -53,16 +53,40 @@ $authHeaders = @{
     "Content-type" = "application/json"
     "ConsistencyLevel" = "eventual" # This header is needed when using advanced filters in Microsoft Graph
 }
+# Graph API BASE URI
+$graphApiUri = "https://graph.microsoft.com/v1.0"
 
+
+# https://learn.microsoft.com/en-us/graph/aad-advanced-queries?tabs=http#application-properties
 # Example filter: Retrieve applications with redirect URIs starting with 'http://localhost'
-$uri = "https://graph.microsoft.com/v1.0/applications?`$filter=web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
+$uri = "$graphApiUri/applications?`$filter=web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
 $groupsWithLocalHostUrl = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groupsWithLocalHostUrl.value.web.redirectUris
 <#
 http://localhost:8080
 #>
+# Example filter: Retrieve applications with redirect URIs that does NOT start with 'http://localhost'
+$uri = "$graphApiUri/applications?`$filter=NOT web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
+$applications = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$applications.value | Select-Object displayName, appId, publisherDomain
 
 # Example search and filter: Retrieve groups with display name or mail containing 'Talk', and filter by mailEnabled and securityEnabled properties
-$uri = "https://graph.microsoft.com/v1.0/groups?`$search=`"displayName:Talk`" OR `"mail:Talk`"&`$filter=(mailEnabled eq false and securityEnabled eq true)&`$count=true"
+$uri = "$graphApiUri/groups?`$search=`"displayName:Talk`" OR `"mail:Talk`"&`$filter=(mailEnabled eq false and securityEnabled eq true)&`$count=true"
 $groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groups.value | Select-Object -ExcludeProperty id
+
+# Example filter: Retrieve groups created within the last 7 days
+$uri = "$graphApiUri/groups?`$filter=createdDateTime ge $((Get-Date).AddDays(-7).ToString("yyyy-MM-ddTHH:mm:ssZ"))&`$count=true"
+$groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$groups.value | Select-Object displayName, createdDateTime
+
+# Example filter: Retrieve users with job title 'Developer' and department 'Engineering'
+$uri = "$graphApiUri/users?`$filter=jobTitle eq 'Developer' and department eq 'Engineering'&`$count=true&`$select=displayName, jobTitle, department"
+$users = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$users.value
+
+#! I do not have any devices in my tenant so this will not return any results
+# Example filter: Retrieve devices with operating system 'Windows' and last sign-in within the last 30 days
+$uri = "$graphApiUri/devices?`$filter=operatingSystem eq 'Windows' and lastSignInDateTime ge $((Get-Date).AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ssZ"))&`$count=true"
+$devices = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$devices.value | Select-Object displayName, operatingSystem, lastSignInDateTime

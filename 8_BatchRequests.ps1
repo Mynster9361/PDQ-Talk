@@ -82,10 +82,10 @@ $body = @{
 $batchRequest = Invoke-RestMethod -Method POST -Uri $uri -Headers $authHeaders -Body ($body | ConvertTo-Json)
 
 # Debugging output
-Write-Host "Batch request response:"
+Write-Output "Batch request response:"
 $batchRequest.responses | ForEach-Object {
-    Write-Host "Response ID: $($_.id)"
-    Write-Host "Status: $($_.status)"
-    Write-Host "Body: $($_.body | ConvertTo-Json -Depth 6)"
-    Write-Host "----------------------------------------"
+    Write-Output "Response ID: $($_.id)"
+    Write-Output "Status: $($_.status)"
+    Write-Output "Body: $($_.body | ConvertTo-Json -Depth 6)"
+    Write-Output "----------------------------------------"
 }
