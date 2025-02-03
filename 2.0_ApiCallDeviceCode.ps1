@@ -47,7 +47,7 @@ $verificationUrl = $response.verification_uri
 # Open authentication url in default browser
 Start-Process $verificationUrl
 # Display instructions to the user
-Write-Host "Please type in the following code: $userCode"
+Write-Output "Please type in the following code: $userCode"
 Pause "Press Enter to continue..."
 
 # Once the user has authenticated, request a token
