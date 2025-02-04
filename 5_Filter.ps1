@@ -53,23 +53,17 @@ $authHeaders = @{
     "Content-type" = "application/json"
 }
 
+# More examples of filters can be found here:
+# https://learn.microsoft.com/en-us/graph/filter-query-parameter?tabs=http#for-single-primitive-types-like-string-int-and-dates
+# Note that all syntaxes that end with ** are advanced filters and can be a bit tricky to use.
+
 # Example filter: Retrieve users whose userPrincipalName starts with 'morten'
 $uri = "https://graph.microsoft.com/v1.0/users?`$filter=startswith(userPrincipalName, 'morten')"
 $usersStartWith = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $usersStartWith.value | Select-Object -ExcludeProperty userPrincipalName, id
 
-<#
-businessPhones    : {}
-displayName       : Morten Mynster Kristensen
-givenName         : Morten
-jobTitle          :
-mail              :
-mobilePhone       :
-officeLocation    :
-preferredLanguage : en
-surname           : Mynster Kristensen
-#>
 
-# More examples of filters can be found here:
-# https://learn.microsoft.com/en-us/graph/filter-query-parameter?tabs=http#for-single-primitive-types-like-string-int-and-dates
-# Note that all syntaxes that end with ** are advanced filters and can be a bit tricky to use.
+# Example filter: Retrieve users where 1 of the 15 extensionattributes endswith 'contoso.com'
+$uri = "https://graph.microsoft.com/v1.0/users?`$filter=extensionattribute/any(p:endswith(p,'contoso.com'))"
+$extensionAttribute = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+

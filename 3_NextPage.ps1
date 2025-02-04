@@ -62,7 +62,7 @@ $authHeaders = @{
 }
 
 # Make an API call to retrieve the user's app role assignments
-$uri = "https://graph.microsoft.com/v1.0/users/$userId/appRoleAssignments"
+$uri = "https://graph.microsoft.com/v1.0/users/$userId/appRoleAssignments?`$top=1"
 $appRoleAssignments = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 
 # Create an array to store the results

@@ -61,14 +61,14 @@ $graphApiUri = "https://graph.microsoft.com/v1.0"
 # Example filter: Retrieve applications with redirect URIs starting with 'http://localhost'
 $uri = "$graphApiUri/applications?`$filter=web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
 $groupsWithLocalHostUrl = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
-$groupsWithLocalHostUrl.value.web.redirectUris
+$groupsWithLocalHostUrl.value | select-object displayname, @{Name="redirectUris"; Expression={$_.web.redirectUris}}
 <#
 http://localhost:8080
 #>
 # Example filter: Retrieve applications with redirect URIs that does NOT start with 'http://localhost'
 $uri = "$graphApiUri/applications?`$filter=NOT web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
 $applications = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
-$applications.value | Select-Object displayName, appId, publisherDomain
+$applications.value | Select-Object displayName, appId
 
 # Example search and filter: Retrieve groups with display name or mail containing 'Talk', and filter by mailEnabled and securityEnabled properties
 $uri = "$graphApiUri/groups?`$search=`"displayName:Talk`" OR `"mail:Talk`"&`$filter=(mailEnabled eq false and securityEnabled eq true)&`$count=true"

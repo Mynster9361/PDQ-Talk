@@ -63,7 +63,7 @@ $body = @{
         @{
             id = "1"
             method = "GET"
-            url = "/users?`$filter=startswith(userPrincipalName, 'morten')"
+            url = "/users/$userId/manager?`$select=id,displayName,jobTitle"
         },
         @{
             id = "2"
@@ -73,7 +73,7 @@ $body = @{
         @{
             id = "3"
             method = "GET"
-            url = "/groups?`$expand=owners"
+            url = "/users/$userId/oauth2PermissionGrants"
         }
     )
 }
@@ -89,3 +89,8 @@ $batchRequest.responses | ForEach-Object {
     Write-Output "Body: $($_.body | ConvertTo-Json -Depth 6)"
     Write-Output "----------------------------------------"
 }
+
+# Display each individual response
+$batchRequest.responses | Where-Object { $_.id -eq "1" } | Select-Object -ExpandProperty body | Select-Object id,displayName,jobTitle
+$($batchRequest.responses | Where-Object { $_.id -eq "2" } | Select-Object -ExpandProperty body).value
+$($batchRequest.responses | Where-Object { $_.id -eq "3" } | Select-Object -ExpandProperty body).value
