@@ -69,8 +69,9 @@ $uri = "https://graph.microsoft.com/v1.0/users?`$filter=userType eq 'Guest' AND 
 $guestUsers = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $guestUsers.value | Select-Object -ExcludeProperty userPrincipalName, id,mail
 
-
-
+$uri = "https://graph.microsoft.com/v1.0/groups?`$filter=(mailEnabled eq false and securityEnabled eq true)"
+$groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$groups.value | Select-Object -ExcludeProperty id
 
 
 $uri = "https://graph.microsoft.com/v1.0/servicePrincipals?`$count=true&`$select=displayName,appId,id,preferredSingleSignOnMode,publisherName,homepage,appOwnerOrganizationId,accountEnabled,tags,applicationTemplateId,servicePrincipalType,createdDateTime,keyCredentials,servicePrincipalNames,preferredTokenSigningKeyThumbprint&`$search=""displayName:PDQ""&`$filter=tags/any(x:x eq 'WindowsAzureActiveDirectoryIntegratedApp') and accountEnabled eq true"

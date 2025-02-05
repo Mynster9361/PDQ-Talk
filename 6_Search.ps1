@@ -57,38 +57,7 @@ $authHeaders += @{ConsistencyLevel = "eventual"}
 $groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groups.value | Select-Object -ExcludeProperty id
 
-<#
-deletedDateTime               :
-classification                :
-createdDateTime               : 16-01-2025 19:32:52
-creationOptions               : {}
-description                   :
-displayName                   : PDQ-TALK
-expirationDateTime            :
-groupTypes                    : {}
-isAssignableToRole            :
-mail                          :
-mailEnabled                   : False
-mailNickname                  : cd525e9e-0
-membershipRule                :
-membershipRuleProcessingState :
-onPremisesDomainName          :
-onPremisesLastSyncDateTime    :
-onPremisesNetBiosName         :
-onPremisesSamAccountName      :
-onPremisesSecurityIdentifier  :
-onPremisesSyncEnabled         :
-preferredDataLocation         :
-preferredLanguage             :
-proxyAddresses                : {}
-renewedDateTime               : 16-01-2025 19:32:52
-resourceBehaviorOptions       : {}
-resourceProvisioningOptions   : {}
-securityEnabled               : True
-securityIdentifier            : S-1-12-1-3257614323-1195558534-501174918-2150161750
-theme                         :
-uniqueName                    :
-visibility                    :
-onPremisesProvisioningErrors  : {}
-serviceProvisioningErrors     : {}
-#>
+$uri = 'https://graph.microsoft.com/v1.0//groups?$search="description:PDQTESTTALK" AND ("displayName:PDQ-TALK")&$count=true'
+$authHeaders += @{ConsistencyLevel = "eventual"}
+$groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$groups.value | Select-Object -ExcludeProperty id
