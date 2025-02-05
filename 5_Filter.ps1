@@ -63,7 +63,16 @@ $usersStartWith = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $usersStartWith.value | Select-Object -ExcludeProperty userPrincipalName, id
 
 
-# Example filter: Retrieve users where 1 of the 15 extensionattributes endswith 'contoso.com'
-$uri = "https://graph.microsoft.com/v1.0/users?`$filter=extensionattribute/any(p:endswith(p,'contoso.com'))"
-$extensionAttribute = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 
+$date = (Get-Date).AddMonths(3).ToString("yyyy-MM-ddT00:00:00.000Z")
+$uri = "https://graph.microsoft.com/v1.0/users?`$filter=userType eq 'Guest' AND externalUserState eq 'PendingAcceptance' AND createdDateTime le $date&`$expand=memberOf"
+$guestUsers = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$guestUsers.value | Select-Object -ExcludeProperty userPrincipalName, id,mail
+
+
+
+
+
+$uri = "https://graph.microsoft.com/v1.0/servicePrincipals?`$count=true&`$select=displayName,appId,id,preferredSingleSignOnMode,publisherName,homepage,appOwnerOrganizationId,accountEnabled,tags,applicationTemplateId,servicePrincipalType,createdDateTime,keyCredentials,servicePrincipalNames,preferredTokenSigningKeyThumbprint&`$search=""displayName:PDQ""&`$filter=tags/any(x:x eq 'WindowsAzureActiveDirectoryIntegratedApp') and accountEnabled eq true"
+$servicePrincipals = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+$servicePrincipals.value | Select-Object -ExcludeProperty id,appId,servicePrincipalNames

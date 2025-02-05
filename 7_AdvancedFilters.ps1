@@ -62,9 +62,8 @@ $graphApiUri = "https://graph.microsoft.com/v1.0"
 $uri = "$graphApiUri/applications?`$filter=web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
 $groupsWithLocalHostUrl = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groupsWithLocalHostUrl.value | select-object displayname, @{Name="redirectUris"; Expression={$_.web.redirectUris}}
-<#
-http://localhost:8080
-#>
+
+
 # Example filter: Retrieve applications with redirect URIs that does NOT start with 'http://localhost'
 $uri = "$graphApiUri/applications?`$filter=NOT web/redirectUris/any(p:startswith(p, 'http://localhost'))&`$count=true"
 $applications = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders

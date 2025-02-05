@@ -58,6 +58,7 @@ $authHeaders = @{
 $uri = "https://graph.microsoft.com/v1.0/`$batch"
 
 # Define the batch request body
+# Max 20 requests per batch
 $body = @{
     requests = @(
         @{
@@ -94,3 +95,42 @@ $batchRequest.responses | ForEach-Object {
 $batchRequest.responses | Where-Object { $_.id -eq "1" } | Select-Object -ExpandProperty body | Select-Object id,displayName,jobTitle
 $($batchRequest.responses | Where-Object { $_.id -eq "2" } | Select-Object -ExpandProperty body).value
 $($batchRequest.responses | Where-Object { $_.id -eq "3" } | Select-Object -ExpandProperty body).value
+
+
+$manager = $batchRequest.responses | Where-Object { $_.id -eq "1" } | Select-Object -ExpandProperty body | Select-Object id,displayName,jobTitle
+
+$uri = "https://graph.microsoft.com/v1.0/users/$($manager.id)?`$select=directReports&`$expand=directReports"
+$directReports = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
+
+$uri = "https://graph.microsoft.com/v1.0/`$batch"
+foreach ($report in $directReports.value.directReports) {
+    Write-Output "Direct Report: $($report.displayName)"
+
+    # Define the batch request body
+    $body = @{
+        requests = @(
+            @{
+                id = "1"
+                method = "GET"
+                url = "/users/$($report.id)/MemberOf"
+            },
+            @{
+                id = "2"
+                method = "GET"
+                url = "/users/$($report.id)/appRoleAssignments"
+            },
+            @{
+                id = "3"
+                method = "GET"
+                url = "/users/$($report.id)/oauth2PermissionGrants"
+            }
+        )
+    }
+
+    # Make the batch request
+    $batchRequest1 = Invoke-RestMethod -Method POST -Uri $uri -Headers $authHeaders -Body ($body | ConvertTo-Json)
+
+}
+
+$uri = "https://graph.microsoft.com/v1.0/users/2743f01a-e211-4cd7-aa22-4d91998702dc/MemberOf"
+$oauth2PermissionGrants = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
