@@ -57,7 +57,7 @@ $authHeaders += @{ConsistencyLevel = "eventual"}
 $groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groups.value | Select-Object -ExcludeProperty id
 
-$uri = 'https://graph.microsoft.com/v1.0//groups?$search="description:PDQTESTTALK" AND ("displayName:PDQ-TALK")&$count=true'
+$uri = 'https://graph.microsoft.com/v1.0/groups?$search="description:PDQTESTTALK" AND ("displayName:PDQ-TALK")&$count=true'
 $authHeaders += @{ConsistencyLevel = "eventual"}
 $groups = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 $groups.value | Select-Object -ExcludeProperty id

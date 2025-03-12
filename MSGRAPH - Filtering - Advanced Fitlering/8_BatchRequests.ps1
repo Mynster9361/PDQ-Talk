@@ -97,8 +97,6 @@ $($batchRequest.responses | Where-Object { $_.id -eq "2" } | Select-Object -Expa
 $($batchRequest.responses | Where-Object { $_.id -eq "3" } | Select-Object -ExpandProperty body).value
 
 
-$manager = $batchRequest.responses | Where-Object { $_.id -eq "1" } | Select-Object -ExpandProperty body | Select-Object id,displayName,jobTitle
-
 $uri = "https://graph.microsoft.com/v1.0/users/$($manager.id)?`$select=directReports&`$expand=directReports"
 $directReports = Invoke-RestMethod -Method Get -Uri $uri -Headers $authHeaders
 

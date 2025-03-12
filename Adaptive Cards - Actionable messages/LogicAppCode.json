@@ -1,0 +1,289 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http"
+            }
+        },
+        "actions": {
+            "Compose_Headers": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "@triggerOutputs()?['headers']"
+            },
+            "Parse_JSON_Headers": {
+                "runAfter": {
+                    "Compose_Headers": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@outputs('Compose_Headers')",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "Host": {
+                                "type": "string"
+                            },
+                            "Max-Forwards": {
+                                "type": "string"
+                            },
+                            "User-Agent": {
+                                "type": "string"
+                            },
+                            "traceparent": {
+                                "type": "string"
+                            },
+                            "Card-Correlation-Id": {
+                                "type": "string"
+                            },
+                            "Message-Id": {
+                                "type": "string"
+                            },
+                            "Action-Request-Id": {
+                                "type": "string"
+                            },
+                            "Identity-Linking-Redirect-Url": {
+                                "type": "string"
+                            },
+                            "Action-Authorization": {
+                                "type": "string"
+                            },
+                            "X-ARR-LOG-ID": {
+                                "type": "string"
+                            },
+                            "CLIENT-IP": {
+                                "type": "string"
+                            },
+                            "DISGUISED-HOST": {
+                                "type": "string"
+                            },
+                            "X-SITE-DEPLOYMENT-ID": {
+                                "type": "string"
+                            },
+                            "WAS-DEFAULT-HOSTNAME": {
+                                "type": "string"
+                            },
+                            "X-Forwarded-Proto": {
+                                "type": "string"
+                            },
+                            "X-AppService-Proto": {
+                                "type": "string"
+                            },
+                            "X-ARR-SSL": {
+                                "type": "string"
+                            },
+                            "X-Forwarded-TlsVersion": {
+                                "type": "string"
+                            },
+                            "X-Forwarded-For": {
+                                "type": "string"
+                            },
+                            "X-Original-URL": {
+                                "type": "string"
+                            },
+                            "X-WAWS-Unencoded-URL": {
+                                "type": "string"
+                            },
+                            "Content-Length": {
+                                "type": "string"
+                            },
+                            "Content-Type": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "Compose_Body": {
+                "runAfter": {
+                    "Token_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Compose",
+                "inputs": "@triggerBody()"
+            },
+            "Parse_JSON_Body": {
+                "runAfter": {
+                    "Compose_Body": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@outputs('Compose_Body')",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "Action": {
+                                "type": "string"
+                            },
+                            "New_Owner": {
+                                "type": "string"
+                            },
+                            "Old_Owner": {
+                                "type": "string"
+                            },
+                            "Objects": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "Type": {
+                                            "type": "string"
+                                        },
+                                        "Name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "Type",
+                                        "Name"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Compose_response_card": {
+                "runAfter": {
+                    "Parse_JSON_Body": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Compose",
+                "inputs": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "version": "1.2",
+                    "hideOriginalBody": true,
+                    "originator": "0882e9ee-a02c-40c8-aad9-d4800d79d495",
+                    "body": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Thank you for the response!",
+                            "wrap": true
+                        }
+                    ]
+                }
+            },
+            "Response_(Update_the_adaptive_card)": {
+                "runAfter": {
+                    "Compose_response_card": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Response",
+                "kind": "Http",
+                "inputs": {
+                    "statusCode": 200,
+                    "headers": {
+                        "CARD-UPDATE-IN-BODY": "true"
+                    },
+                    "body": "@outputs('Compose_response_card')"
+                }
+            },
+            "Initialize_variable_called_params": {
+                "runAfter": {
+                    "Compose_the_json_objects": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "params",
+                            "type": "object",
+                            "value": {
+                                "Action": "@{body('Parse_JSON_Body')?['Action']}",
+                                "New_Owner": "@{body('Parse_JSON_Body')?['New_Owner']}",
+                                "Old_Owner": "@{body('Parse_JSON_Body')?['Old_Owner']}",
+                                "Objects": "@{outputs('Compose_the_json_objects')}"
+                            }
+                        }
+                    ]
+                }
+            },
+            "Token_variable": {
+                "runAfter": {
+                    "Parse_JSON_Headers": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "Token",
+                            "type": "string",
+                            "value": "@body('Parse_JSON_Headers')?['Action-Authorization']"
+                        }
+                    ]
+                }
+            },
+            "Create_job": {
+                "runAfter": {
+                    "Initialize_variable_called_params": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureautomation']['connectionId']"
+                        }
+                    },
+                    "method": "put",
+                    "body": {
+                        "properties": {
+                            "runOn": "BS-BRNPROD",
+                            "parameters": "@variables('params')"
+                        }
+                    },
+                    "path": "***REMOVED***",
+                    "queries": {
+                        "x-ms-api-version": "2015-10-31",
+                        "runbookName": "test-Mortenkr",
+                        "wait": false
+                    }
+                }
+            },
+            "Compose_the_json_objects": {
+                "runAfter": {
+                    "Response_(Update_the_adaptive_card)": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Compose",
+                "inputs": "@string(body('Parse_JSON_Body')?['Objects'])"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "azureautomation": {
+                    "id": "***REMOVED***",
+                    "connectionId": "***REMOVED***",
+                    "connectionName": "azureautomation-2"
+                }
+            }
+        }
+    }
+}
