@@ -4,7 +4,7 @@ Import-Module Microsoft.Graph.Users.Actions
 
 
 $params = @{
-    message = @{
+    message         = @{
         subject      = "Test HTML email from PowerShell"
         body         = @{
             contentType = "HTML"
@@ -22,14 +22,20 @@ $params = @{
         toRecipients = @(
             @{
                 emailAddress = @{
-                    address = $env:userToSendTo
+                    address = $env:tstUserId # tstUserToSendTo
                 }
             }
         )
-
     }
+    saveToSentItems = "true"
 }
 
 # A UPN can also be used as -UserId.
-Send-MgUserMail -UserId $env:userToSendTo -BodyParameter $params
+Send-MgUserMail -UserId $env:tstUserId -BodyParameter $params # tstUserToSendTo
 #endregion
+
+#region using the -debug switch
+
+Send-MgUserMail -UserId $env:tstUserId -BodyParameter $params -Debug
+# The -Debug switch will show you the raw HTTP request and response, including the URL, headers, and body.
+# This is useful for troubleshooting and understanding how the API works.

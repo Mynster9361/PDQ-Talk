@@ -1,13 +1,13 @@
 #region Authentication
 # Reference Docs: https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/connect-mggraph?view=graph-powershell-1.0
+$tenantId = $env:tsttenantId
 # Interactive authentication (best for demos)
-Connect-MgGraph -Scopes "User.Read.All"
+Connect-MgGraph -Scopes "User.Read.All" -TenantId $tenantId
 
 
 # Automation authentication (for automation)
-$tenantId = $env:TENANT_ID
-$appId = $env:CLIENT_ID
-$secret = $env:CLIENT_SECRET
+$appId = $env:tstAppId
+$secret = $env:tstClientSecret
 
 # Client secret auth (for automation)
 $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $appId, (ConvertTo-SecureString -String $secret -AsPlainText -Force)

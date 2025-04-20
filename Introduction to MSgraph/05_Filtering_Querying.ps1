@@ -1,9 +1,9 @@
 #region Filtering Basics
-Get-MgUser -Filter "country eq 'Denmark'"
+Get-MgUser -Filter "country eq 'United States'"
 
 # Design you filters to be as specific as possible to reduce the amount of data returned. For example, if you are looking for users in a specific department and city, you can combine filters using the AND operator.
-# This will return all users in the IT department and located in Cities starting with BR. Note that this is not case sensitive.
-Get-MgUser -Filter "accountEnabled eq true AND startsWith(city,'BR') AND startsWith(department,'IT')"
+# This will return all users in the IT department and located in Cities starting with PIU. Note that this is not case sensitive.
+Get-MgUser -Filter "accountEnabled eq true AND startsWith(city,'PI') AND startsWith(department,'Marketing')"
 
 # Using the developer tools in the browser for easier creation of filters.
 # https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserManagementMenuBlade/~/AllUsers
