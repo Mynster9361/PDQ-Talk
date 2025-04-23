@@ -17,6 +17,23 @@ Connect-MgGraph -Scopes "Mail.ReadWrite.Shared"
 Get-MgContext | Select-Object -ExpandProperty Scopes
 # check all the permissions granted to the user and to which apps
 Get-MgUserOauth2PermissionGrant -UserId $(Get-MgContext | Select-Object -ExpandProperty Account) | Select-Object -ExpandProperty Scope | Select-Object -Unique
+<#
+ User.Read
+ offline_access openid profile
+ User.ReadBasic.All offline_access openid profile
+ openid profile email
+ User.Read offline_access openid profile
+ Mail.Send openid profile offline_access
+ User.Read openid email profile offline_access
+ User.Read email openid profile
+ openid profile
+ User.Read openid profile Mail.Send
+ EWS.AccessAsUser.All openid profile offline_access
+ Files.ReadWrite Files.ReadWrite.All User.Read offline_access
+ openid profile User.Read offline_access Mail.Send
+User.Read
+email offline_access openid profile User.Read
+#>
 
 
 Find-MgGraphPermission user -PermissionType "Delegated" | Where-Object Consent -EQ "User"
