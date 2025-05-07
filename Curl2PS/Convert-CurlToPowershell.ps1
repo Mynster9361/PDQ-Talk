@@ -47,12 +47,12 @@ function Convert-CurlToPowerShell {
         'Content-Type'  = $CurlObject.ContentType -join ", "
     }
 
-    $method = $CurlObject.Method
+    $method = "POST"
 
-    $psObject = $curlObject.Body | ConvertFrom-Json
+    $psObject = $curlObject.Body
     # Format the requests array dynamically
     $requests = $psObject.requests | ForEach-Object {
-        $headersPart = if ($_.headers) { "'headers' = $($_.headers | ConvertTo-Json -Depth 10)" } else { $null }
+        $headersPart = if ($_.headers) { "'headers' = @$($($_.headers | ConvertTo-Json -Depth 10 )-replace ":","=")" } else { $null }
         $bodyPart = if ($_.body) { "'body' = $($_.body | ConvertTo-Json -Depth 10)" } else { $null }
         @"
         @{
@@ -72,7 +72,7 @@ function Convert-CurlToPowerShell {
     requests = @(
 $requestsFormatted
     )
-}
+} | ConvertTo-Json -Depth 10
 "@
 
 
@@ -105,6 +105,7 @@ Invoke-RestMethod @splat
 }
 
 # PSGallery: https://www.powershellgallery.com/packages/Curl2PS
+# Made by ThePoShWolf
 # GitHub: https://github.com/ThePoShWolf/Curl2PS
 # Install-Module -Name Curl2PS -Scope CurrentUser
 
@@ -151,12 +152,55 @@ $generatedScript2
 
 # Remember to outcomment $ with ` in your curl string
 $liveSample = @"
-
+curl 'https://graph.microsoft.com/beta/`$batch' \
+  -H 'accept: application/json, text/plain, */*' \
+  -H 'accept-language: en-US,en;q=0.9,da;q=0.8' \
+  -H 'authorization: Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6IjktdnJzZUVWVXhHazNQamtDMmhyRlpTTXl5VWFZcnZ0Vld5RU1JRmlacmMiLCJhbGciOiJSUzI1NiIsIng1dCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSIsImtpZCI6IkNOdjBPSTNSd3FsSEZFVm5hb01Bc2hDSDJYRSJ9.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20vIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvYWM0MWU5ZGEtMTgyMS00NDg1LThlZjgtN2QxZWIwNjk0ZDkyLyIsImlhdCI6MTc0NjYzNTc5MSwibmJmIjoxNzQ2NjM1NzkxLCJleHAiOjE3NDY2NDEyOTksImFjY3QiOjAsImFjciI6IjEiLCJhY3JzIjpbInAxIl0sImFpbyI6IkFhUUFXLzhaQUFBQVAxeTNtUTFEM1d3Yy95TTF3Y0l0MEpvYmhjQ3g4cVB1Z2U1QjBDRnFJSEdlRitVWnUzSVpDTUU4VmJXMWwrY1BvVjNLL3NWV2dRR1NBTjNreUxCTmppZkg3cUIrQ1hNS2JHVFR0WmJMVGlSQUw2Y0daYVNJNC84SWZ4d0UrTlB6VmttLytoUDRoWGtrNEs1Z29TSmxHaUs3MmlVMGlDRmd0Qk9QRGtqUTM5M05DQ01VK0ZodEoxYWxNTnlTNW5pd1dMMHpTTi9kbmZBdll4V1JLdG5LSVE9PSIsImFtciI6WyJwd2QiLCJtZmEiXSwiYXBwX2Rpc3BsYXluYW1lIjoiTWljcm9zb2Z0X0FBRF9Vc2Vyc0FuZFRlbmFudHMiLCJhcHBpZCI6ImY5ODg1ZTZlLTZmNzQtNDZiMy1iNTk1LTM1MDE1N2EyNzU0MSIsImFwcGlkYWNyIjoiMCIsImZhbWlseV9uYW1lIjoiS3Jpc3RlbnNlbiIsImdpdmVuX25hbWUiOiJNb3J0ZW4iLCJpZHR5cCI6InVzZXIiLCJpcGFkZHIiOiIxODguMjI4LjkuNzQiLCJuYW1lIjoiTW9ydGVuIEtyaXN0ZW5zZW4iLCJvaWQiOiJhYzU1YzM1MS0yOGE2LTQ0OTctOGVkNy00NWMxMmNiYmRiMTkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDQ0MzRDNUYzNCIsInJoIjoiMS5BVUVCMnVsQnJDRVloVVNPLUgwZXNHbE5rZ01BQUFBQUFBQUF3QUFBQUFBQUFBQkhBVHhCQVEuIiwic2NwIjoiQWRtaW5pc3RyYXRpdmVVbml0LlJlYWRXcml0ZS5BbGwgQXVkaXRMb2cuUmVhZC5BbGwgRGlyZWN0b3J5LkFjY2Vzc0FzVXNlci5BbGwgRGlyZWN0b3J5LldyaXRlLlJlc3RyaWN0ZWQgZW1haWwgRXZlbnRMaXN0ZW5lci5SZWFkV3JpdGUuQWxsIElkZW50aXR5Umlza3lVc2VyLlJlYWQuQWxsIG9wZW5pZCBPcmdhbml6YXRpb24uUmVhZC5BbGwgUG9saWN5LlJlYWRXcml0ZS5BdXRob3JpemF0aW9uIHByb2ZpbGUgUHVibGljS2V5SW5mcmFzdHJ1Y3R1cmUuUmVhZFdyaXRlLkFsbCBVc2VyLkVuYWJsZURpc2FibGVBY2NvdW50LkFsbCBVc2VyLlJlYWRXcml0ZS5BbGwiLCJzaWQiOiIwMDQwNDUzOS1kZjA3LWY5ZGEtZjg4Yi02YjIxOGE2OTRlMjEiLCJzaWduaW5fc3RhdGUiOlsia21zaSJdLCJzdWIiOiIwX1NqZGo2bjBnd2RoVUI3OWZLc1pQUlZzeElTQTRDTjAyQ2tNSHF6UThnIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkVVIiwidGlkIjoiYWM0MWU5ZGEtMTgyMS00NDg1LThlZjgtN2QxZWIwNjk0ZDkyIiwidW5pcXVlX25hbWUiOiJtb3J0ZW5ANDRmeTVqLm9ubWljcm9zb2Z0LmNvbSIsInVwbiI6Im1vcnRlbkA0NGZ5NWoub25taWNyb3NvZnQuY29tIiwidXRpIjoiOXNKNUVmMlVta1NPVjlTNHFmQnlBUSIsInZlciI6IjEuMCIsIndpZHMiOlsiNjJlOTAzOTQtNjlmNS00MjM3LTkxOTAtMDEyMTc3MTQ1ZTEwIiwiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19pZHJlbCI6IjEgMTQiLCJ4bXNfc3QiOnsic3ViIjoiSl9aUFd5ajJlMjBLM28tcWZsR0szRnlGZThNdDFmbjVhZURIUE9xa2FrOCJ9LCJ4bXNfdGNkdCI6MTczODY1MTM0MywieG1zX3RkYnIiOiJFVSJ9.ZpNPcYwle8d8SLvngr_txoxQL8f0pUF-z7TFRJyi5ScJ1sElYqGsA8W5aGHnoVK6V4lspHMCCrImh9qjE_ttM7PQUDycCh83k9AGGKUT6L9VM4W9uMRvnw5dp_i3RLhWxHi6RbegXMBx5BDuoUCz-X9EMt1cWrbhWC02BEsx1HqkmRc7LwKW4X59pO2Ay1RWLM4gUqmSUv8pAs3oALfj9-jznx81aNz06VGC_p5TUkHq-Zrpe_LFeTN_daE887ZYrdQkDvwaQ0zcAS05ZpSyWEkxV5yjXNULXTPMwaN8M4tludSqoGcu-L1Cj4v1EMbJ7CMM5t0cBhhjnFO-3VU0lA' \
+  -H 'client-request-id: 015eb575-6866-4952-8311-8bf733a8b6e7' \
+  -H 'content-type: application/json' \
+  -H 'dnt: 1' \
+  -H 'origin: https://sandbox-3.reactblade.portal.azure.net' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://sandbox-3.reactblade.portal.azure.net/' \
+  -H 'sec-ch-ua: "Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: cross-site' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36' \
+  -H 'x-ms-client-request-id: 015eb575-6866-4952-8311-8bf733a8b6e7' \
+  -H 'x-ms-client-session-id: a1a868d947524849bcbf1d0921cc73b0' \
+  -H 'x-ms-command-name: Common - GetPhotos' \
+  --data-raw '{"requests":[{"id":"6ef99efe-5a27-4663-98cf-4e0ce5b179d0","url":"/users/6ef99efe-5a27-4663-98cf-4e0ce5b179d0/photos/48x48/`$value","method":"GET"},{"id":"650a2ee0-b525-44d1-aa60-8cf3d1a0401c","url":"/users/650a2ee0-b525-44d1-aa60-8cf3d1a0401c/photos/48x48/`$value","method":"GET"},{"id":"6bc1765c-1f8c-4e34-8fc5-e8a21a571156","url":"/users/6bc1765c-1f8c-4e34-8fc5-e8a21a571156/photos/48x48/`$value","method":"GET"},{"id":"17c1ba87-8e79-404a-8cf7-e09fba6187cc","url":"/users/17c1ba87-8e79-404a-8cf7-e09fba6187cc/photos/48x48/`$value","method":"GET"},{"id":"2437eddd-d06d-40f4-bff6-f5dc0b45345a","url":"/users/2437eddd-d06d-40f4-bff6-f5dc0b45345a/photos/48x48/`$value","method":"GET"},{"id":"154bcbc0-cb19-4243-9dd1-04943de1bfc0","url":"/users/154bcbc0-cb19-4243-9dd1-04943de1bfc0/photos/48x48/`$value","method":"GET"},{"id":"4c1b914b-4774-4f8e-b650-d8fb5fcd2628","url":"/users/4c1b914b-4774-4f8e-b650-d8fb5fcd2628/photos/48x48/`$value","method":"GET"},{"id":"cb869b14-0f03-4289-95ad-c60b3a000939","url":"/users/cb869b14-0f03-4289-95ad-c60b3a000939/photos/48x48/`$value","method":"GET"},{"id":"8e88620e-1607-4593-9c43-bf8bca7e86e2","url":"/users/8e88620e-1607-4593-9c43-bf8bca7e86e2/photos/48x48/`$value","method":"GET"},{"id":"16b416e1-10ba-4891-831f-9d6697985efe","url":"/users/16b416e1-10ba-4891-831f-9d6697985efe/photos/48x48/`$value","method":"GET"},{"id":"5d77eeac-b3b5-4479-acbb-34fd0c9906fb","url":"/users/5d77eeac-b3b5-4479-acbb-34fd0c9906fb/photos/48x48/`$value","method":"GET"},{"id":"88cf532c-e464-4654-b570-a4fb3183cbc0","url":"/users/88cf532c-e464-4654-b570-a4fb3183cbc0/photos/48x48/`$value","method":"GET"},{"id":"43c2b271-905d-475a-9dd0-0cf83848bde0","url":"/users/43c2b271-905d-475a-9dd0-0cf83848bde0/photos/48x48/`$value","method":"GET"},{"id":"dd3adf6e-a475-414e-8067-327d68a94a7c","url":"/users/dd3adf6e-a475-414e-8067-327d68a94a7c/photos/48x48/`$value","method":"GET"},{"id":"ac55c351-28a6-4497-8ed7-45c12cbbdb19","url":"/users/ac55c351-28a6-4497-8ed7-45c12cbbdb19/photos/48x48/`$value","method":"GET"},{"id":"0450035a-6d7f-417f-98fa-ae78a7121827","url":"/users/0450035a-6d7f-417f-98fa-ae78a7121827/photos/48x48/`$value","method":"GET"},{"id":"1c5f3f52-e8f6-401b-8634-9bb0d21ec1d2","url":"/users/1c5f3f52-e8f6-401b-8634-9bb0d21ec1d2/photos/48x48/`$value","method":"GET"},{"id":"821fd53c-3afd-43ca-b381-8751f7aa96cc","url":"/users/821fd53c-3afd-43ca-b381-8751f7aa96cc/photos/48x48/`$value","method":"GET"},{"id":"3897e020-c8be-4d90-bf31-83589d9d1ea6","url":"/users/3897e020-c8be-4d90-bf31-83589d9d1ea6/photos/48x48/`$value","method":"GET"}]}'
 "@
 
 
-$curlObject3 = Invoke-Curl2PS -CurlString $liveSample
-$generatedScript3 = Convert-CurlToPowerShell -CurlObject $curlObject3
+Invoke-Curl2PS -CurlString $liveSample -AsString
 
-# Output the generated script
-$generatedScript3
+<#
+Invoke-RestMethod -Uri 'https://graph.microsoft.com/beta/$batch'
+-Method Get
+-ContentType 'application/json'
+-Body '{"requests":[{"id":"6ef99efe-5a27-4663-98cf-4e0ce5b179d0","url":"/users/6ef99efe-5a27-4663-98cf-4e0ce5b179d0/photos/48x48/`$value","method":"GET"},{"id":"650a2ee0-b525-44d1-aa60-8cf3d1a0401c","url":"/users/650a2ee0-b525-44d1-aa60-8cf3d1a0401c/photos/48x48/`$value","method":"GET"},{"id":"6bc1765c-1f8c-4e34-8fc5-e8a21a571156","url":"/users/6bc1765c-1f8c-4e34-8fc5-e8a21a571156/photos/48x48/`$value","method":"GET"},{"id":"17c1ba87-8e79-404a-8cf7-e09fba6187cc","url":"/users/17c1ba87-8e79-404a-8cf7-e09fba6187cc/photos/48x48/`$value","method":"GET"},{"id":"2437eddd-d06d-40f4-bff6-f5dc0b45345a","url":"/users/2437eddd-d06d-40f4-bff6-f5dc0b45345a/photos/48x48/`$value","method":"GET"},{"id":"154bcbc0-cb19-4243-9dd1-04943de1bfc0","url":"/users/154bcbc0-cb19-4243-9dd1-04943de1bfc0/photos/48x48/`$value","method":"GET"},{"id":"4c1b914b-4774-4f8e-b650-d8fb5fcd2628","url":"/users/4c1b914b-4774-4f8e-b650-d8fb5fcd2628/photos/48x48/`$value","method":"GET"},{"id":"cb869b14-0f03-4289-95ad-c60b3a000939","url":"/users/cb869b14-0f03-4289-95ad-c60b3a000939/photos/48x48/`$value","method":"GET"},{"id":"8e88620e-1607-4593-9c43-bf8bca7e86e2","url":"/users/8e88620e-1607-4593-9c43-bf8bca7e86e2/photos/48x48/`$value","method":"GET"},{"id":"16b416e1-10ba-4891-831f-9d6697985efe","url":"/users/16b416e1-10ba-4891-831f-9d6697985efe/photos/48x48/`$value","method":"GET"},{"id":"5d77eeac-b3b5-4479-acbb-34fd0c9906fb","url":"/users/5d77eeac-b3b5-4479-acbb-34fd0c9906fb/photos/48x48/`$value","method":"GET"},{"id":"88cf532c-e464-4654-b570-a4fb3183cbc0","url":"/users/88cf532c-e464-4654-b570-a4fb3183cbc0/photos/48x48/`$value","method":"GET"},{"id":"43c2b271-905d-475a-9dd0-0cf83848bde0","url":"/users/43c2b271-905d-475a-9dd0-0cf83848bde0/photos/48x48/`$value","method":"GET"},{"id":"dd3adf6e-a475-414e-8067-327d68a94a7c","url":"/users/dd3adf6e-a475-414e-8067-327d68a94a7c/photos/48x48/`$value","method":"GET"},{"id":"ac55c351-28a6-4497-8ed7-45c12cbbdb19","url":"/users/ac55c351-28a6-4497-8ed7-45c12cbbdb19/photos/48x48/`$value","method":"GET"},{"id":"0450035a-6d7f-417f-98fa-ae78a7121827","url":"/users/0450035a-6d7f-417f-98fa-ae78a7121827/photos/48x48/`$value","method":"GET"},{"id":"1c5f3f52-e8f6-401b-8634-9bb0d21ec1d2","url":"/users/1c5f3f52-e8f6-401b-8634-9bb0d21ec1d2/photos/48x48/`$value","method":"GET"},{"id":"821fd53c-3afd-43ca-b381-8751f7aa96cc","url":"/users/821fd53c-3afd-43ca-b381-8751f7aa96cc/photos/48x48/`$value","method":"GET"},{"id":"3897e020-c8be-4d90-bf31-83589d9d1ea6","url":"/users/3897e020-c8be-4d90-bf31-83589d9d1ea6/photos/48x48/`$value","method":"GET"}]}'
+-Headers @{
+    'accept' = 'application/json, text/plain, */*'
+    'accept-language' = 'en-US,en;q=0.9,da;q=0.8'
+    'authorization' = 'Bearer REDACTED'
+    'client-request-id' = '015eb575-6866-4952-8311-8bf733a8b6e7'
+    'dnt' = '1'
+    'origin' = 'https://sandbox-3.reactblade.portal.azure.net'
+    'priority' = 'u=1, i'
+    'referer' = 'https://sandbox-3.reactblade.portal.azure.net/'
+    'sec-ch-ua' = '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"'
+    'sec-ch-ua-mobile' = '?0'
+    'sec-ch-ua-platform' = '"Windows"'
+    'sec-fetch-dest' = 'empty'
+    'sec-fetch-mode' = 'cors'
+    'sec-fetch-site' = 'cross-site'
+    'user-agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+    'x-ms-client-request-id' = '015eb575-6866-4952-8311-8bf733a8b6e7'
+    'x-ms-client-session-id' = 'a1a868d947524849bcbf1d0921cc73b0'
+    'x-ms-command-name' = 'Common - GetPhotos'
+}
+#>
